@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 3 - Face Registration</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #0f2027, #203a43, #2c5364);
+      color: #00ffe7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 3rem;
+      border-radius: 16px;
+      box-shadow: 0 0 25px #00ffe7;
+      width: 90%;
+      max-width: 600px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      background: #00ffe7;
+      color: black;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    #camera {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      margin-top: 1rem;
+      box-shadow: 0 0 15px cyan;
+    }
+
+    #statusMsg {
+      margin-top: 15px;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Step 3: Register Your Face</h1>
+    <video id="camera" autoplay playsinline></video>
+    <button class="btn" onclick="captureFaces()">📸 Capture Face</button>
+    <div id="statusMsg"></div>
+  </div>
+
+  <script>
+    const uniqueID = localStorage.getItem("uniqueID");
+    const video = document.getElementById("camera");
+    const statusMsg = document.getElementById("statusMsg");
+
+    if (!uniqueID) {
+      alert("⚠️ No unique ID found. Please complete Step 1 first.");
+      window.location.href = "step1.html";
+    }
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(error => {
+        alert("❌ Cannot access webcam. Please allow camera permissions.");
+        console.error(error);
+      });
+
+    function captureFaces() {
+      let success = false;
+      statusMsg.innerText = "Capturing... Please hold your face steady.";
+      fetch("http://127.0.0.1:5000/capture_faces", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `unique_id=${uniqueID}`
+      })
+        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+        .then(result => {
+          if (result.status === 200) {
+            statusMsg.style.color = "#00ff99";
+            statusMsg.innerText = result.body.message + " ✅ Face images saved.";
+            success = true;
+
+          } else {
+            statusMsg.style.color = "red";
+            statusMsg.innerText = result.body.error;
+          }
+        })
+        .catch(error => {
+          statusMsg.style.color = "red";
+          statusMsg.innerText = "❌ Error capturing face.";
+          console.error(error);
+        }).finally(() => {
+          if (success)
+            setTimeout(() => {
+              window.location.href = "step4.html";
+            }, 10000); // Only go to next step after server confirms
+        })
+    }
+  </script>
+</body>
+
+</html>

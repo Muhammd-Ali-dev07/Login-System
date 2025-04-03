@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroGate - AI Login Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Orbitron', sans-serif;
+    }
+    body 
+    {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+    
+    .container 
+    {
+      position: relative;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 3rem;
+      border-radius: 15px;
+      box-shadow: 0 0 25px #00ffe7;
+      z-index: 10;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+    }
+    .ai-greeting {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      color: #00fff7;
+    }
+    .ai-subtext {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      color: #ddd;
+    }
+    .btn-container {
+      margin: 1.5rem 0;
+    }
+    .btn {
+      padding: 0.8rem 1.5rem;
+      margin: 0.5rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      background-color: #00ffe7;
+      color: #000;
+      cursor: pointer;
+      transition: 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn:hover {
+      background-color: #00bfa6;
+    }
+    .help-text {
+      margin: 1rem 0 0.5rem;
+      color: #ccc;
+      font-size: 0.9rem;
+    }
+    #userQuestion {
+      padding: 0.6rem;
+      width: 80%;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    .ai-answer {
+      margin-top: 1rem;
+      min-height: 1.5rem;
+      color: #00ffe7;
+    }
+    .mic-btn {
+      background-color: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #00ffe7;
+      margin-left: 0.5rem;
+    }
+    .ai-avatar {
+      width: 100px;
+      margin: 0 auto 10px;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce 
+    {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    canvas.particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas class="particles"></canvas>
+  <div class="container">
+    <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" class="ai-avatar" alt="AI Avatar" />
+    <h1 id="aiGreeting" class="ai-greeting"></h1>
+    <p id="aiSubtext" class="ai-subtext"></p>
+    <div class="btn-container">
+      <a href="login.html" class="btn">Already a User</a>
+      <a href="register.html" class="btn">New User - Register</a>
+    </div>    
+    <p class="help-text">Need help? Ask your assistant below 👇</p>
+    <div>
+      <input type="text" id="userQuestion" placeholder="Ask about Login or Register..." />
+      <button class="mic-btn" onclick="startVoiceInput()">🎤</button>
+    </div>
+    <button class="btn" onclick="handleQuestion()">Ask</button>
+    <div id="aiAnswer" class="ai-answer"></div>
+  </div>
+
+  <script>
+    const greeting = "Welcome to NeuroGate. An advanced AI-driven login system. Power meets intelligence.";
+    const subtext = "Please select your option below. If you're unsure, just ask me.";
+    const greetingElement = document.getElementById("aiGreeting");
+
+    let index = 0;
+    function typeText() {
+      if (index < greeting.length) {
+        greetingElement.textContent += greeting.charAt(index);
+        index++;
+        setTimeout(typeText, 35);
+      } else {
+        document.getElementById("aiSubtext").textContent = subtext;
+        const speak = new SpeechSynthesisUtterance(greeting + ' ' + subtext);
+        window.speechSynthesis.speak(speak);
+      }
+    }
+    window.onload = typeText;
+
+    function handleQuestion() {
+      const q = document.getElementById("userQuestion").value.toLowerCase();
+      let answer = "";
+      document.getElementById("aiAnswer").textContent = "";
+
+      if (q.includes("register")) {
+        answer = "Register means creating a new account. We'll capture your face, voice, and ID to identify you in future.";
+      } else if (q.includes("login")) {
+        answer = "Login is for returning users. The system will verify your face and voice to allow access.";
+      } else {
+        answer = "I'm here to assist! Try asking about 'Register' or 'Login'.";
+      }
+      document.getElementById("aiAnswer").textContent = answer;
+      window.speechSynthesis.speak(new SpeechSynthesisUtterance(answer));
+    }
+
+    function startVoiceInput() 
+    {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.start();
+
+      recognition.onresult = function(event) 
+      {
+        document.getElementById("userQuestion").value = event.results[0][0].transcript;
+        handleQuestion();
+      };
+    }
+
+    // Particle background
+    const canvas = document.querySelector(".particles");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = Array.from({ length: 100 }, () => 
+    ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 1,
+      dx: (Math.random() - 0.5) * 0.5,
+      dy: (Math.random() - 0.5) * 0.5,
+    }));
+
+    function drawParticles() 
+    {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#00ffe7';
+        ctx.fill();
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+      });
+      requestAnimationFrame(drawParticles);
+    }
+    drawParticles();
+  </script>
+</body>
+</html>

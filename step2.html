@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Step 2 - Voice Authentication</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+
+    * {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #00ffe7;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.75);
+      padding: 3rem;
+      border-radius: 20px;
+      box-shadow: 0 0 30px #00ffe7;
+      width: 95%;
+      max-width: 800px;
+      text-align: center;
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 2rem;
+      color: #00ffe7;
+    }
+
+    .btn {
+      background: #00ffe7;
+      border: none;
+      border-radius: 12px;
+      color: black;
+      padding: 1rem;
+      width: 100%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .btn:hover {
+      background: #0ff;
+      transform: scale(1.03);
+    }
+
+    #greenDot {
+      display: none;
+      width: 20px;
+      height: 20px;
+      background-color: lime;
+      border-radius: 50%;
+      margin: 1rem auto;
+      box-shadow: 0 0 10px lime;
+    }
+
+    audio {
+      display: none;
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    #visualContainer {
+      display: none;
+      margin-top: 2rem;
+    }
+
+    #continueBtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 0.8rem 1.2rem;
+      font-size: 1rem;
+      background-color: #00ff99;
+      border: none;
+      border-radius: 10px;
+      color: black;
+      display: none;
+      box-shadow: 0 0 10px #00ff99;
+      cursor: pointer;
+    }
+
+    .matrix-label {
+      font-size: 1.3rem;
+      margin: 2rem 0 1rem;
+      color: #00ffe7;
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      gap: 10px;
+      justify-items: center;
+      margin-top: 1rem;
+    }
+
+    .matrix-cell {
+      border: 2px solid #00ffe7;
+      padding: 0.5rem;
+      border-radius: 6px;
+      background: rgba(0, 255, 231, 0.1);
+      font-size: 0.9rem;
+      animation: popIn 0.5s ease-in-out;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <button id="continueBtn" onclick="window.location.href='step3.html'">✅ Continue</button>
+
+  <div class="container">
+    <h1>Step 2: Register Your Voice</h1>
+    <button id="recordBtn" class="btn">🎤 Record Voice</button>
+    <div id="greenDot"></div>
+    <audio id="audioPlayback" controls></audio>
+
+    <div id="visualContainer">
+      <h2>📊 MFCC Matrix <span style="font-size: 0.8rem;">(Linear Algebra Grid)</span></h2>
+      <div id="mfccPlot" style="height:300px;"></div>
+
+      <h2>🎯 Mean Feature Vector</h2>
+      <div id="vectorPlot" style="height:300px;"></div>
+
+      <h2>🔢 MFCC Matrix Snapshot (First Row)</h2>
+      <div id="mfccRowSnapshot" class="matrix-grid"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    const uniqueID = localStorage.getItem("uniqueID");
+
+    document.getElementById("recordBtn").addEventListener("click", async () => {
+      if (!uniqueID) {
+        alert("⚠️ No unique ID found. Please complete Step 1 first.");
+        window.location.href = "step1.html";
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => saveAudio();
+
+      mediaRecorder.start();
+      setTimeout(() => mediaRecorder.stop(), 4000);
+    });
+
+    function saveAudio() {
+      const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+      const formData = new FormData();
+      formData.append("unique_id", uniqueID);
+      formData.append("audio", audioBlob);
+
+      fetch("http://127.0.0.1:5000/upload_voice", {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("❌ Server error: " + data.error);
+          return;
+        }
+
+        document.getElementById("greenDot").style.display = "block";
+        const audioElem = document.getElementById("audioPlayback");
+        audioElem.src = URL.createObjectURL(audioBlob);
+        audioElem.style.display = "block";
+
+        if (data.mfcc_matrix && data.mean_vector) {
+          document.getElementById("visualContainer").style.display = "block";
+          document.getElementById("continueBtn").style.display = "inline-block";
+
+          plotMFCC(data.mfcc_matrix);
+          plotVector(data.mean_vector);
+          showMatrixRow(data.mfcc_matrix[0]);
+        }
+      })
+      .catch(err => {
+        alert("❌ Failed to save voice.");
+        console.error(err);
+      });
+    }
+
+    function plotMFCC(matrix) {
+      Plotly.newPlot("mfccPlot", [{
+        z: matrix,
+        type: 'heatmap',
+        colorscale: 'Jet'
+      }], {
+        margin: { t: 30 },
+        yaxis: { title: "MFCC Coefficients" },
+        xaxis: { title: "Time Frames" }
+      });
+    }
+
+    function plotVector(vector) {
+      Plotly.newPlot("vectorPlot", [{
+        x: vector.map((_, i) => i + 1),
+        y: vector,
+        type: 'bar',
+        marker: { color: '#00ffe7' }
+      }], {
+        xaxis: { title: "Coefficient Index" },
+        yaxis: { title: "Value" }
+      });
+    }
+
+    function showMatrixRow(row) {
+      const container = document.getElementById("mfccRowSnapshot");
+      container.innerHTML = '';
+      row.forEach(val => {
+        const div = document.createElement("div");
+        div.classList.add("matrix-cell");
+        div.textContent = Number(val).toFixed(1);
+        container.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>

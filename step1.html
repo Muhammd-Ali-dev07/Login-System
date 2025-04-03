@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 1 - Basic Information</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #0f2027, #203a43, #2c5364);
+      color: #00ffe7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 3rem;
+      border-radius: 16px;
+      box-shadow: 0 0 25px #00ffe7;
+      width: 90%;
+      max-width: 500px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.7rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #00ffe7;
+      background: #000;
+      color: #00ffe7;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: cyan;
+    }
+
+    .error {
+      border: 2px solid red !important;
+      color: red;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      background: #00ffe7;
+      color: black;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: transform 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+    }
+
+    .message {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .success {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .error-message {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Step 1: Enter Your Basic Information</h1>
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="gender">Gender</label>
+        <select id="gender" required>
+          <option value="">Select</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="uniqueID">Unique ID</label>
+        <input type="text" id="uniqueID" required>
+        <p id="errorText" class="error-message" style="display:none;">This ID already exists. Try another.</p>
+      </div>
+
+      <button type="submit" class="btn">Next Step</button>
+    </form>
+
+    <div id="successMessage" class="message success">
+      ✅ First Step Completed! One step closer.
+      <button class="btn" onclick="continueToNext()">Continue</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", function(event) {
+      event.preventDefault(); 
+    
+      const name = document.getElementById("name").value.trim();
+      const gender = document.getElementById("gender").value;
+      const uniqueID = document.getElementById("uniqueID").value.trim();
+      const errorText = document.getElementById("errorText");
+      const idInput = document.getElementById("uniqueID");
+
+      console.log(name,gender,uniqueID)
+    
+      fetch("http://127.0.0.1:5000/add_user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, gender, unique_id:uniqueID }),
+      })
+      .then(response => response.json().then(data => {
+        console.log(data)
+        return { status: response.status, body: data }}))
+      .then(result => {
+        if (result.status === 409) {  // If user ID already exists
+          alert("⚠️ User ID already exists! Try another.");
+          idInput.value = "";
+          idInput.classList.add("error");
+        } else if (result.status === 200) {  // If user is successfully added
+          localStorage.setItem("uniqueID", uniqueID);
+          alert("✅ First Step Completed! One step closer.");
+          window.location.href = "step2.html";  // Move to next step
+        } else {
+          alert("❌ Something went wrong! Check Flask backend.");
+        }
+      })
+      .catch(error => {
+        alert("❌ Error connecting to server! Ensure Flask is running.");
+        console.error("Error:", error);
+      });
+    });
+    </script>
+</body>
+</html>

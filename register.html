@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroGate - Register</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #0f2027, #203a43, #2c5364);
+      color: #00ffe7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 3rem;
+      border-radius: 16px;
+      box-shadow: 0 0 25px #00ffe7;
+      width: 90%;
+      max-width: 700px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    h1 {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 2px solid #00ffe7;
+      animation: typing 4s steps(40, end), blink-caret 0.75s step-end infinite;
+    }
+
+    .steps {
+      margin-top: 2rem;
+    }
+
+    .step {
+      background: rgba(0, 255, 231, 0.1);
+      border: 1px solid #00ffe7;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .step:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 20px #00ffe7;
+    }
+
+    .ai-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: url('https://api.dicebear.com/6.x/bottts/svg?seed=AI') no-repeat center;
+      background-size: cover;
+      margin: 0 auto 1rem auto;
+      animation: pulse 2s infinite;
+    }
+
+    .continue-btn {
+      display: block;
+      margin: 2rem auto 0;
+      padding: 0.75rem 2rem;
+      background: #00ffe7;
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .continue-btn:hover {
+      background: #0ff;
+      transform: scale(1.05);
+    }
+
+    @keyframes typing {
+      from {
+        width: 0;
+      }
+
+      to {
+        width: 100%;
+      }
+    }
+
+    @keyframes blink-caret {
+      50% {
+        border-color: transparent;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 231, 0.7);
+      }
+
+      70% {
+        box-shadow: 0 0 0 15px rgba(0, 255, 231, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 231, 0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="ai-avatar"></div>
+    <h1 id="aiGreeting">Welcome, new user...</h1>
+    <div class="steps">
+      <div class="step">👁 Step 1: Face Registration - We will capture real-time face data.</div>
+      <div class="step">🎙 Step 2: Voice Recognition - Speak to register your unique voice.</div>
+      <div class="step">🖐 Step 3: Fingerprint Scan - Use fingerprint for added security.</div>
+      <div class="step">📄 Step 4: Save Info - Finalize & save your identity securely.</div>
+    </div>
+    <button class="continue-btn" onclick="window.location.href='step1.html'">Continue</button>
+  </div>
+  <script>
+    window.onload = () => {
+      const text = "Welcome to NeuroGate Registration. Get ready to secure your identity.";
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.pitch = 1.2;
+      utter.rate = 1;
+      window.speechSynthesis.speak(utter);
+    };
+  </script>
+</body>
+
+</html>
